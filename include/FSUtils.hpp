@@ -9,7 +9,6 @@ typedef std::set<std::filesystem::path> setOfPaths;
 
 void createPathsFromDirectory(setOfPaths &sorted_set, std::string dir);
 void readImagesFromPaths(const setOfPaths &sorted_set, std::vector<cv::Mat> &data, const int NR_IMGS_TO_READ, const int COLOR_CODE);
-void printHello();
 
 // In commandLineParser Docs they use opencv String, I am using std::string. Seems work just fine.
 const std::string keys =
