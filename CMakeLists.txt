@@ -16,17 +16,19 @@ message(${CMAKE_CXX_COMPILER})
 
 # INCLUDE OPENCV DIRECTORIES. With homebrew includes are currently in /opt/homebrew/Cellar/opencv/4.5.3_2/include/opencv4
 include_directories(${OpenCV_INCLUDE_DIRS}) # Has systemwide scope all target in all subdirectories
-target_include_directories(Exjobb "../include") # has target scope—it adds includ path to the include path for target specifix target.
-
+#target_include_directories(Exjobb "../include") # has target scope—it adds includ path to the include path for target specifix target.
+#target_include_directories(Exjobb include)
 add_subdirectory(mylib)
+
 
 # MACRO TO COMPILE CPP FILES
 MACRO(add_example name)
   ADD_EXECUTABLE(${name} ${name}.cpp)
   TARGET_LINK_LIBRARIES(${name} ${OpenCV_LIBS} mylib)
+  target_include_directories(${name} PUBLIC include)
 ENDMACRO()
 
 # COMPILE CPP FILES USING THIS LINE
 ######## EDIT THE FILE NAMES ########
 add_example(ProcessVideo)
-#add_example(PCA)
+add_example(PCA)

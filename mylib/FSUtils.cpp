@@ -17,6 +17,7 @@ using std::endl;
 using std::string;
 using std::vector;
 using cv::Mat;
+
 string type2str(int type) {
   string r;
 
