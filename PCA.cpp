@@ -125,36 +125,25 @@ void manualPCA(const vector<Mat> &images, const int NR_OF_COMP_TO_USE){
 
 void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
 
-    // Reshape and stack images into a rowMatrix
+    // Reshape and stack images into a rowMatrix. The 3-channels will be concatenated to long row vector.
     Mat data = formatImagesForPCA(images);
     cout << "Size of data matrix " << data.size() <<endl;
 
     // send empty Mat() since we don't have precomputed means, pca does it for us.
     PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, VAR_TO_RETAIN);
-    Mat eigVecs = pca.eigenvectors;
+    Mat eigVecMatrix = pca.eigenvectors;
+    cout << "Size of principal components matrix " << data.size() <<endl;
 
-    Mat img_channels[3];
-    const int NR_PIXELS  = images[0].rows*images[0].cols; // size of one channel
-    eigVecs.row(0).colRange(0,NR_PIXELS).copyTo(img_channels[0]);
-    eigVecs.row(0).colRange(NR_PIXELS,2*NR_PIXELS).copyTo(img_channels[1]);
-    eigVecs.row(0).colRange(2*NR_PIXELS,3*NR_PIXELS).copyTo(img_channels[2]);
-
-    for (size_t i = 0; i < 3; i++)
-    {
-        img_channels[i] = img_channels[i].reshape(1,images[0].rows);
-        normalize(img_channels[i], img_channels[i], 0, 255, NORM_MINMAX, CV_8UC1);
-    }
-
-    Mat eigenFace; // Preparing to show the first principal component as an image.
-    merge(img_channels,3,eigenFace);
+    // display some of the principal compenents
+    displayComponents(eigVecMatrix, 3, NR_PIXELS,NR_ROWS);
 
     // Using the first image in our data to project onto princ.comp bases.
     Mat point = pca.project(data.row(0));
+    // transforming from pca coords back to image
     Mat reconstruction = pca.backProject(point);
 
     int NR_OF_COMP_USED = pca.eigenvectors.size().height;
     cout << "Using " << NR_OF_COMP_USED << " principal components for reconstruction.";
-
 
     normalize(reconstruction, reconstruction, 0, 255, NORM_MINMAX, CV_8UC1);
     Mat chs[3];
@@ -169,10 +158,8 @@ void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
     Mat outImg;  // This is the reconstructured image
     merge(chs,3,outImg);
 
-    namedWindow("Frame", WINDOW_NORMAL);
-    imshow("Frame",eigenFace);
-    namedWindow("Frame2", WINDOW_NORMAL);
-    imshow("Frame2",outImg);
+    namedWindow("Reconstruction", WINDOW_NORMAL);
+    imshow("Reconstruction",outImg);
 
     String filename{"components_used_"};
     filename.append(std::to_string(NR_OF_COMP_USED)).append(".png");

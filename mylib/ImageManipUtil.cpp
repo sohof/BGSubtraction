@@ -1,12 +1,15 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/core/types.hpp>
+#include <opencv2/highgui.hpp>
 #include <vector>
+#include <string>
 #include <iostream>
 #include "../include/ImageManipUtil.hpp"
 
 using std::vector;
-using cv::Mat;
+using std::string;
+using namespace cv;
 /**
  * @brief Formats images in order to apply PCA. Each image is split into
  * its separate channels and then flattened into a row vector so all the channels
@@ -69,4 +72,47 @@ vector<Mat> formatImagesForManualPCA(const vector<Mat> &images)
     }
     std::cout <<"Size of Mat inside dataVector " << dataVector.at(0).size() << std::endl;
     return dataVector;
+}
+
+/**
+ * @brief Display the first N (given as param) number of principal components.
+ * @param A Mat matrix consisting of eigenVectors/Principal Components as row vectors
+ * @param unsigned int nr of components to display
+ * @return void
+ * @return void
+ */
+void displayComponents(const Mat &eigVecMatrix, const int NR_COMP_TO_DISPLAY, const int NR_PIXELS, const int NR_ROWS )
+{
+
+  vector<Mat> componentsToDisplay; // for display purposes
+  // need to prepare for separating the concatenated vector into its channels.
+  Mat img_channels[3];
+
+  for(int i = 0; i < NR_COMP_TO_DISPLAY; ++i){
+
+    // Extract/copy the channels information from a given eig.vector,
+    // saved as row vector of size NR_PIXELS
+    eigVecMatrix.row(i).colRange(0,NR_PIXELS).copyTo(img_channels[0]);
+    eigVecMatrix.row(i).colRange(NR_PIXELS,2*NR_PIXELS).copyTo(img_channels[1]);
+    eigVecMatrix.row(i).colRange(2*NR_PIXELS,3*NR_PIXELS).copyTo(img_channels[2]);
+
+    // Each channel must be reshaped to appropriate image size, and normalized to correct
+    // range for display purposes.
+    for (size_t i = 0; i < 3; i++)
+    {
+        // Size of img_channels matrix after reshape is image/patch  width x height
+        img_channels[i] = img_channels[i].reshape(1,NR_ROWS);
+        normalize(img_channels[i], img_channels[i], 0, 255, NORM_MINMAX, CV_8UC1);
+    }
+    Mat compenentAsIMG; // Preparing to show the first principal component as an image.
+    merge(img_channels,3,compenentAsIMG);
+    componentsToDisplay.push_back(compenentAsIMG);
+  }
+
+  for(int i =0; i< NR_COMP_TO_DISPLAY; ++i){
+    string frame = "PC_Comp_"+ std::to_string(i+1);
+    namedWindow(frame, WINDOW_NORMAL);
+    imshow(frame ,componentsToDisplay.at(i));
+  }
+  int k = waitKey(0);
 }
