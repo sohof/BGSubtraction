@@ -32,4 +32,4 @@ ENDMACRO()
 # COMPILE CPP FILES USING THIS LINE
 ######## EDIT THE FILE NAMES ########
 add_example(ProcessVideo)
-add_example(PCA)
+add_example(Main)

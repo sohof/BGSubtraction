@@ -48,10 +48,6 @@ void createPathsFromDirectory(setOfPaths &sorted_set, string dir)
     }
 }
 
-void printHello(){
-
-  cout <<"Hello sohof"<<endl;
-}
 void readImagesFromPaths(const setOfPaths &sorted_set, vector<Mat> &data, const int NR_IMGS_TO_READ, const int COLOR_CODE)
 {
     bool DEBUG = 0;

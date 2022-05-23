@@ -6,10 +6,15 @@
 #include <string>
 #include <iostream>
 #include "../include/ImageManipUtil.hpp"
+#include "../include/Constants.hpp"
 
-using std::vector;
+using std::vector; 
 using std::string;
+using std::cout; 
+using std::endl;
 using namespace cv;
+using namespace myConsts;
+
 /**
  * @brief Formats images in order to apply PCA. Each image is split into
  * its separate channels and then flattened into a row vector so all the channels
@@ -20,14 +25,14 @@ using namespace cv;
  */
 Mat formatImagesForPCA(const vector<Mat> &images)
 {
-  unsigned NR_IMGS = images.size(); // Nr of images we have
-  unsigned NR_CHANNELS = images[0].channels();
-  unsigned NR_ROWS = images[0].rows; // row size of each image
-  unsigned NR_COLS = images[0].cols; // col size of each image
-  unsigned NR_PIXELS = NR_ROWS*NR_COLS; // so our imgs is a point in NR_OF_PIXELS dimensional space.
+  const unsigned NR_IMGS = images.size(); // Nr of images we have
+  const unsigned NR_CHANNELS = images[0].channels();
+  const unsigned NR_ROWS = images[0].rows; // row size of each image
+  const unsigned NR_COLS = images[0].cols; // col size of each image
+  const unsigned NR_PIXELS = NR_ROWS*NR_COLS; // so our imgs is a point in NR_OF_PIXELS dimensional space.
 
   Mat dst(NR_IMGS, NR_CHANNELS*NR_PIXELS , CV_64FC1);
-    for(unsigned int i = 0; i < images.size(); i++)
+    for(decltype(images.size()) i = 0; i < images.size(); i++)
     {
         Mat rgbchannel[3];
         cv::split(images.at(i), rgbchannel);
@@ -50,27 +55,27 @@ Mat formatImagesForPCA(const vector<Mat> &images)
  */
 vector<Mat> formatImagesForManualPCA(const vector<Mat> &images)
 {
-  unsigned NR_IMGS = images.size(); // Nr of images we have
-  unsigned NR_CHANNELS = images[0].channels();
-  unsigned NR_ROWS = images[0].rows; // row size of each image
-  unsigned NR_COLS = images[0].cols; // col size of each image
-  unsigned NR_PIXELS = NR_ROWS*NR_COLS; // so our imgs is a point in NR_OF_PIXELS dimensional space.
+  const unsigned NR_IMGS = images.size(); // Nr of images we have
+  const unsigned NR_CHANNELS = images[0].channels();
+  const unsigned NR_ROWS = images[0].rows; // row size of each image
+  const unsigned NR_COLS = images[0].cols; // col size of each image
+  const unsigned NR_PIXELS = NR_ROWS*NR_COLS; // so our imgs is a point in NR_OF_PIXELS dimensional space.
 
     vector<Mat> dataVector;
-    for (size_t i = 0; i < 3; i++)
+    for (int i = 0; i < NR_CHANNELS; i++)
     {
        dataVector.push_back(Mat(NR_PIXELS, NR_IMGS, CV_64FC1,cv::Scalar(0.0)));
     }
     for(size_t i = 0; i < NR_IMGS; ++i)
     {
-        Mat rgbchannel[3];
+        Mat rgbchannel[NR_CHANNELS];
         cv::split(images.at(i), rgbchannel);
         // our column vector should have NR_PIXELS rows
         rgbchannel[0].reshape(0,NR_PIXELS).convertTo(dataVector.at(0).col(i),CV_64FC1);
         rgbchannel[1].reshape(0,NR_PIXELS).convertTo(dataVector.at(1).col(i),CV_64FC1);
         rgbchannel[2].reshape(0,NR_PIXELS).convertTo(dataVector.at(2).col(i),CV_64FC1);
     }
-    std::cout <<"Size of Mat inside dataVector " << dataVector.at(0).size() << std::endl;
+    cout <<"Size of Mat inside dataVector " << dataVector.at(0).size() << endl;
     return dataVector;
 }
 
@@ -83,7 +88,7 @@ vector<Mat> formatImagesForManualPCA(const vector<Mat> &images)
  */
 void displayComponents(const Mat &eigVecMatrix, const int NR_COMP_TO_DISPLAY, const int NR_PIXELS, const int NR_ROWS )
 {
-
+  cout<< " inside  displaycomponents"<<endl;
   vector<Mat> componentsToDisplay; // for display purposes
   // need to prepare for separating the concatenated vector into its channels.
   Mat img_channels[3];
@@ -115,4 +120,29 @@ void displayComponents(const Mat &eigVecMatrix, const int NR_COMP_TO_DISPLAY, co
     imshow(frame ,componentsToDisplay.at(i));
   }
   int k = waitKey(0);
+}
+
+void separateIntoBlocks(const vector<Mat> &images,  vector<vector<Mat>> &blocks,const int NR_H_BLOCKS, const int NR_V_BLOCKS) {
+
+  const int NR_OF_BLOCKS = NR_H_BLOCKS * NR_V_BLOCKS;
+
+  int img_counter = 0;
+  cout << "block size = " << blocks.size() <<endl;
+  for(decltype(images.size()) n = 0; n< images.size(); ++n) {
+    // row, col in inner loop refer to nr block rows and block cols. 
+    // process each img in left to right manner horizontally, and top to bottom vertically.
+     for(int row = 0; row < NR_V_BLOCKS; ++row) {    
+       // outer loop deals with block vertically
+       //inner loop goes from left 
+        for(int col = 0; col < NR_H_BLOCKS; ++col) {    
+          
+          Mat imgRoi(images.at(n)(Range(row*BLOCK_SIZE,row*BLOCK_SIZE + BLOCK_SIZE),
+                                  Range(col*BLOCK_SIZE,col*BLOCK_SIZE+BLOCK_SIZE)));
+        // indexing into vector of vectors, which will be of length NR_OF_BLOCKS
+          blocks.at(row*NR_H_BLOCKS + col).push_back(imgRoi);
+      }
+    }
+
+  }
+
 }
