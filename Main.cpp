@@ -7,7 +7,6 @@
 #include <vector>
 #include <set>
 #include <FSUtils.hpp>
-#include <Subspace.hpp>
 #include <ImageManipUtil.hpp>
 #include <Patch.hpp>
 #include <Constants.hpp>
@@ -21,9 +20,32 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+
+
+void computeProjections(const vector<vector<Mat>> &blocks, const vector<Patch> &patches, vector<Mat> &blocksAsCoords){
+
+    auto nrBlocks = blocks.size();
+    auto nrFrames = blocks.at(0).size(); // at this moment all blocks should/must have same nrFrames
+
+    for(decltype(nrBlocks) i = 0; i < nrBlocks; ++i) { // for each of our blocks do
+        // create a mat to hold all computed projections from a given block as column vectors.
+        blocksAsCoords.push_back(Mat(PNR_MAX_COMPONENTS, nrFrames, CV_64FC1,cv::Scalar(0.0))); 
+
+        auto patch = patches.at(i); // get the patch corresponding to block i . 
+      
+        for(decltype(nrFrames) j = 0; j< nrFrames; ++j) {  // for each of the frames belonging to block i do
+
+            Mat frameAsRowVec = formatImageIntoRowVector(blocks.at(i).at(j));
+            Mat coords = patch.project(frameAsRowVec); //
+            coords = coords.reshape(1,coords.cols); // reshape row to column vector  
+            coords.col(0).copyTo(blocksAsCoords.at(i).col(j));
+        }
+       
+    }
+
+}
 int main(int argc, char** argv)
 {
-
     cv::CommandLineParser parser(argc, argv, keys);
     if (parser.has("help"))
     {
@@ -37,24 +59,26 @@ int main(int argc, char** argv)
     const string directoryOfImages = parser.get<string>("@path");
     const string process = parser.get<string>("@process");
 
-    if (directoryOfImages.empty())
+    if (directoryOfImages.empty() || process.empty())
     {
-        cout << "No directory path supplied " <<endl;
+        std::cerr << "ERROR: No directory path or process type supplied " <<endl;
         parser.printMessage();
         exit(1);
     }
+
     // setOfPaths is a typedef set<std::filesystem::path>  imported from FSUtils.hpp to hold filenames
     setOfPaths sorted_set;   
     vector<Mat> images; // vector to hold images.
 
     createPathsFromDirectory(sorted_set,directoryOfImages); // create set of filenames
-    readImagesFromPaths(sorted_set,images,NR_OF_IMGS,COLOR_CODE); // read pics to vector
+    readImagesFromPaths(sorted_set,images,NR_OF_IMGS); // read pics to vector
 
     const int NR_H_BLOCKS = images[0].cols / BLOCK_SIZE; // how many horizontal block is the img divided into
     const int NR_V_BLOCKS = images[0].rows / BLOCK_SIZE; // how many vertical blocks
 
     vector<vector<Mat>> blocks(NR_H_BLOCKS * NR_V_BLOCKS); // Create vectors to hold sequence of blocks. 
-
+    vector<Patch> patches; // vector to hold all patches. 
+    vector<Mat> blocksAsCoords; // vector to hold projections of blocks 
     separateIntoBlocks(images,blocks,NR_H_BLOCKS,NR_V_BLOCKS);
 
     cout << "Size of image(s) width x height = " << images.at(0).size() << ". Nr of rows  = "
@@ -66,17 +90,38 @@ int main(int argc, char** argv)
     if(process.compare("pca") == 0){
         cout <<"Performing PCA: variance to retain "<< VAR_TO_RETAIN<<  endl;
         doPCA(images,VAR_TO_RETAIN);
+        
     }
-    else if(process.compare("manpca") == 0){
-     cout <<"Performing Manual PCA: nr of principal components to use "<< NR_OF_COMP_TO_USE <<  endl;
-     manualPCA(images,NR_OF_COMP_TO_USE);
-    }
-    else if(process.compare("svd") == 0){ // SVD ONLY WORKS WITH VAR_TO_RETAIN, does accept nr of comps.
-        cout <<"Performing compression by SVD, variance to retain " << VAR_TO_RETAIN << endl;
-        compress_using_SVD(images,VAR_TO_RETAIN);
+    else if(process.compare("patchpca") == 0){
+     cout <<"Performing PCA on patches: nr of principal components to use "<<  PNR_MAX_COMPONENTS <<  endl;
+     doPCAOnPatches(blocks,patches);
+     computeProjections(blocks,patches,blocksAsCoords);
+        for (auto patch : patches){
+            // patch.displayPCAComponents();
+        }
+
+        for(decltype(blocksAsCoords.size()) i =0;  i<blocksAsCoords.size(); ++i){
+            
+            auto matrix = blocksAsCoords.at(i);
+            cout << matrix.size() <<endl;
+            Mat m = matrix.t();
+            for(int j = 0; j<3 ; ++j){
+                
+                auto coords = patches.at(i).backProject(m.row(j));
+                //cout<<  m.row(j) << endl;
+                displayImage(constructImageFromRow(coords,PNR_ROWS,PNR_COLS));
+                int k = waitKey(0);
+            }
+        }
     }
     else{
+        
+        Mat A(2, 3, CV_64F);  
+        //manualPCA(images,5);
+        cout << A <<endl;
+        cout << A.size() <<endl;
         cout <<"Doing Nothing " <<endl;
+        cout << A.reshape(1,A.total()) <<endl;
     }
 
 return 0;

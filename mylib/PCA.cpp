@@ -7,6 +7,9 @@
 #include "../include/ImageManipUtil.hpp"
 #include "../include/Patch.hpp"
 #include "../include/Constants.hpp"
+#include "../include/FSUtils.hpp"
+#include <sys/time.h>
+#include <sys/resource.h>
 /*
 Seems visual code will flag the headers as missing even if cmake makes sures they are included during the build. So I added include path in visual code c++ Configurations. Probably because the code can be compiled from withing visual code as well, altough I am not using it. */
 
@@ -17,51 +20,46 @@ using std::endl;
 using std::string;
 using std::vector;
 
+void doPCAOnPatches(const vector<vector<Mat>> &blocks, vector<Patch> &patches ){
+
+    for(decltype(blocks.size()) i = 0; i < blocks.size(); ++i) {
+             
+        // Reshape and stack blocks into a rowMatrix. The 3-channels will be concatenated to long row vector.
+        Mat data = formatImagesForPCA(blocks.at(i));
+        //cout << "Size of data matrix " << data.size() <<endl;
+        Patch p(i,data); 
+        patches.push_back(p);
+    }
+
+}
 void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
 
     const int NR_ROWS = images[0].rows; // row size of each image which means height
     const int NR_COLS = images[0].cols; // col size of each image which means width
-    const int NR_PIXELS = NR_ROWS*NR_COLS; // so our imgs is a point in NR_OF_PIXELS dimensional space.
 
     // Reshape and stack images into a rowMatrix. The 3-channels will be concatenated to long row vector.
     Mat data = formatImagesForPCA(images);
     cout << "Size of data matrix " << data.size() <<endl;
-    const int maxComp = 5;
+    //const int maxComp = 10;
     // send empty Mat() since we don't have precomputed means, pca does it for us.
-    PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, maxComp);
-    Mat eigVecMatrix = pca.eigenvectors;
-    cout << "Size of principal components matrix " << data.size() <<endl;
+    PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, VAR_TO_RETAIN);
+    cout << "Size of principal components matrix " << pca.eigenvectors.size() <<endl;
     
     int NR_OF_COMP_USED = pca.eigenvectors.size().height;
-    cout << "Using " << NR_OF_COMP_USED << " principal components for reconstruction.";
+    cout << "Using " << NR_OF_COMP_USED << " principal components for reconstruction." <<endl;
 
     // display some of the principal compenents
-    displayComponents(eigVecMatrix, NR_OF_COMP_USED, NR_PIXELS, NR_ROWS);
+    displayComponents(pca.eigenvectors, NR_OF_COMP_USED, NR_ROWS, NR_COLS);
 
     // Using the first image in our data to project onto princ.comp bases.
-    Mat point = pca.project(data.row(0));
-    // transforming from pca coords back to image
-    Mat reconstruction = pca.backProject(point);
+    Mat proj_coords = pca.project(data.row(0));
 
-    normalize(reconstruction, reconstruction, 0, 255, NORM_MINMAX, CV_8UC1);
-    Mat chs[3];
+    // transforming from pca coords back to image/pixel space
+    Mat reconstruction = pca.backProject(proj_coords);
+    reconstruction = constructImageFromRow(reconstruction,NR_ROWS,NR_COLS);  // Rearrange/rescale to actual img
 
-    reconstruction.row(0).colRange(0,NR_PIXELS).copyTo(chs[0]);
-    reconstruction.row(0).colRange(NR_PIXELS,2*NR_PIXELS).copyTo(chs[1]);
-    reconstruction.row(0).colRange(2*NR_PIXELS,3*NR_PIXELS).copyTo(chs[2]);
-    chs[0] = chs[0].reshape(0, NR_ROWS);
-    chs[1] = chs[1].reshape(0, NR_ROWS);
-    chs[2] = chs[2].reshape(0, NR_ROWS);
-
-    Mat outImg;  // This is the reconstructured image
-    merge(chs,3,outImg);
-
-    namedWindow("Reconstruction", WINDOW_NORMAL);
-    imshow("Reconstruction",outImg);
-
-    String filename{"components_used_"};
-    filename.append(std::to_string(NR_OF_COMP_USED)).append(".png");
-    imwrite("../output/pca_out/"+filename ,outImg);
+    displayImage(reconstruction,"Reconstruction");
+    writeImage(reconstruction,NR_OF_COMP_USED);
 
     int k = waitKey(0);
     destroyAllWindows();
@@ -69,7 +67,6 @@ void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
 
 void manualPCA(const vector<Mat> &images, const int NR_OF_COMP_TO_USE){
 
-    const int NR_IMGS = images.size(); // Nr of images we have
     const int NR_ROWS = images[0].rows; // row size of each image which means height
     const int NR_COLS = images[0].cols; // col size of each image which means width
     const int NR_PIXELS = NR_ROWS*NR_COLS; // so our imgs is a point in NR_OF_PIXELS dimensional space.
@@ -84,8 +81,8 @@ void manualPCA(const vector<Mat> &images, const int NR_OF_COMP_TO_USE){
     means will be colum vector of (dim of image)*nr channels;
     */
     Mat means(NR_PIXELS, NR_CHANNELS, CV_64FC1, Scalar(0.0));
-    for(size_t i =0; i<dataVec.size(); ++i){  // dataVec.size() is the nr of channels
-         for(size_t j =0; j< dataVec.at(i).rows; ++j){
+    for(decltype(dataVec.size()) i =0; i<dataVec.size(); ++i){  // dataVec.size() is the nr of channels
+         for(int j =0; j< dataVec.at(i).rows; ++j){
             means.at<double>(j,i) = mean(dataVec.at(i).row(j))[0]; // mean returns 4 element vector
             dataVec.at(i).row(j) = dataVec.at(i).row(j) - mean(dataVec.at(i).row(j)); //somehow subtraction works
          }
@@ -117,9 +114,9 @@ void manualPCA(const vector<Mat> &images, const int NR_OF_COMP_TO_USE){
 
     // Step 3. Calculate the actual principal Component vectors using Av.
     int eig_vec_dim =eigVecs.row(0).size().width;  // a bit unneccesary maybe since sym.matrices nrOfeigvec=dim
-    for (size_t n = 0; n < NR_CHANNELS; n++)
+    for (int n = 0; n < NR_CHANNELS; n++)
     {
-        for(size_t i = 0; i < eigVecs.size().height; ++i)
+        for(int i = 0; i < eigVecs.size().height; ++i)
         {
             // reshape to col.vec before mpl
             principalComponentMats.at(n).col(i)= dataVec.at(0)* eigenVectors.at(n).row(i).reshape(0,eig_vec_dim); // / eigenValues.at(n).row(i);
@@ -153,16 +150,13 @@ void manualPCA(const vector<Mat> &images, const int NR_OF_COMP_TO_USE){
         reconstruction.push_back(tmp);
     }
 
-    // Step 6. Merge channels display and save img to disk.
+    // Step 6. Merge channels, display and save to disk.
+  
     Mat outImg;
     merge(reconstruction,outImg);
-    namedWindow("Frame", WINDOW_NORMAL);
-    imshow("Frame",outImg);
 
-    String filename{"components_used_"};
-    filename.append(std::to_string(NR_OF_COMP_TO_USE)).append(".png");
-    imwrite("../output/pca_out/"+filename ,outImg);
-
+    displayImage(outImg);
+    writeImage(outImg,NR_OF_COMP_TO_USE);
 
     int k = waitKey(0);
     destroyAllWindows();

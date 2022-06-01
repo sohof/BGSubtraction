@@ -2,28 +2,41 @@
 #define BGS_PATCH
 #include <opencv2/core.hpp>
 
-// Seems: best way define global const from c++17 onwards. Declares the variable to be an inline variable.
-
 
 class Patch 
 {
+public:
+    // constructors
+    Patch() = default; //recommended to provide default if other cons. are defined.
+    explicit Patch(int id);
+    Patch(int id, cv::InputArray data);
+    
+    // const member functions
+    int getID() const ;
+    void displayPCAComponents() const;
+    cv::Mat getPrincipalComponents();
+    cv::Mat backProject(const cv::Mat &vec) const ;
+    cv::Mat project(const cv::Mat &vec) const;
+
+    // member functions    
+    void calcPCA(cv::InputArray data);
 
 private:
-const int ID;
-cv::PCA pca;
-
-public:
-    Patch(int id);
-   // ~Patch();
-
-    int getID();
-
-     //constants declarations
-    
-    static const int PNR_ROWS; // row size of each image
-    static const int PNR_COLS; // col size of each image
-    static const int PNR_PIXELS; // so our imgs is a point in NR_OF_PIXELS dimensional space.
+    const int ID =0;
+    cv::PCA pca;
 };
 
+
+
+// Inline functions should be def. in same header as corresp. class def.
+
+inline
+cv::Mat Patch::getPrincipalComponents(){
+    return pca.eigenvectors;
+ };
+inline
+int Patch::getID() const {
+    return ID;
+}
 
 #endif

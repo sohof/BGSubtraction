@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(OpenCV_DIR /opt/homebrew/Cellar/opencv/4.5.3_2/lib/cmake/opencv4)
 
-# add_compile_options(-Wall -Wextra -Wpedantic)
+#add_compile_options(-Wall -Wextra -pedantic -Werror -fsanitize=address,undefined)
 
 # MAKE SURE OPENCV IS INSTALLED CORRECTLY. Each library prepares file/s which cmake uses to configure everything.
 find_package(OpenCV REQUIRED)

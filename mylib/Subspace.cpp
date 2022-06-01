@@ -25,7 +25,7 @@ void compress_using_SVD(const vector<Mat> &images, const double VAR_TO_RETAIN){
     // w is sing.vales, u left eig.vecs, vt is right.eig.vecs transposed.
     Mat w_s[3], u_s[3], vt_s[3];
 
-    for (size_t i = 0; i < data.channels(); i++)
+    for (int i = 0; i < data.channels(); i++)
     {
         cv::SVD::compute(bgr_channels[i], w_s[i], u_s[i], vt_s[i]);
     } // compute svd for each channel separately
@@ -46,12 +46,12 @@ void compress_using_SVD(const vector<Mat> &images, const double VAR_TO_RETAIN){
     const int NR_OF_COMP_USED = count;
 
     vector<Mat> chls; // Prepare 3 matrices
-    for (size_t i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         chls.push_back(Mat(data.size(),CV_64FC1,cv::Scalar(0.0)));
     }
     // Add up to rank "count"
-    for (size_t i = 0; i < count; i++)
+    for (int i = 0; i < count; i++)
     {
         chls[0] += w_s[0].at<double>(i,0)*u_s[0].col(i)*vt_s[0].row(i);
         chls[1] += w_s[1].at<double>(i,0)*u_s[1].col(i)*vt_s[1].row(i);

@@ -76,7 +76,7 @@ int main()
       int k = waitKey(1); // Wait for a keystroke in the window
 
       if(k == 's') {
-        cout << "Do sth if s was pressed e.g save the img " << '\n';
+        cout << "Do sth if s was pressed" << '\n';
         display = false;
       }
     }
