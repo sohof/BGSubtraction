@@ -43,8 +43,7 @@ string type2str(int type) {
   return r;
 }
 /**
- * @brief used to display an image to the screen. After display will wait until any key is pressed.
- * 
+ * @brief used to display an image to the screen. After display it will wait until any key is pressed.
  * @param img Mat representing the img. 
  */
 void displayImage(const cv::Mat &img){
@@ -55,7 +54,7 @@ void displayImage(const cv::Mat &img){
 /**
  * @brief used to display an image to the screen. After display will wait until any key is pressed.
  * @param img Mat representing the img. 
- * @param img Mat representing the img. 
+ * @param windowName a String to be used to name window used to display the img. 
  */
 void displayImage(const cv::Mat &img, const string windowName){
 
@@ -108,7 +107,8 @@ void createPathsFromDirectory(setOfPaths &sorted_set, string dir)
 /**
  * @brief readImagesFromPaths reads images from a set of sorted paths containing images/frames. It is assumed
  * that frames are sorted in chronological order. Usually the set of paths contains more frames than we would
- * to use. The param NR_IMGS_TO_READ controls how many of the paths in the sorted set are used. The frames   *  read are stored in a vector<Mat> supplied as argument.
+ * to use. The param NR_IMGS_TO_READ controls how many of the paths in the sorted set are used. The frames   
+ * read are stored in a vector<Mat> supplied as argument.
  * @param sorted_set A set of sorted paths containing the paths of the images to read.
  * @param data  A reference to a vector of Mat to store the images.
  * @param NR_IMGS_TO_READ A const int representing the nr of images to read

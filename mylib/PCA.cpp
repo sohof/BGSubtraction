@@ -40,9 +40,9 @@ void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
     // Reshape and stack images into a rowMatrix. The 3-channels will be concatenated to long row vector.
     Mat data = formatImagesForPCA(images);
     cout << "Size of data matrix " << data.size() <<endl;
-    //const int maxComp = 10;
+    const int maxComp = 10;
     // send empty Mat() since we don't have precomputed means, pca does it for us.
-    PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, VAR_TO_RETAIN);
+    PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, maxComp);
     cout << "Size of principal components matrix " << pca.eigenvectors.size() <<endl;
     
     int NR_OF_COMP_USED = pca.eigenvectors.size().height;

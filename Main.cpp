@@ -73,8 +73,8 @@ int main(int argc, char** argv)
     createPathsFromDirectory(sorted_set,directoryOfImages); // create set of filenames
     readImagesFromPaths(sorted_set,images,NR_OF_IMGS); // read pics to vector
 
-    const int NR_H_BLOCKS = images[0].cols / BLOCK_SIZE; // how many horizontal block is the img divided into
-    const int NR_V_BLOCKS = images[0].rows / BLOCK_SIZE; // how many vertical blocks
+    const int NR_H_BLOCKS = images[0].cols / BLOCK_SIZE; // # horizontal blocks the img will be divided into
+    const int NR_V_BLOCKS = images[0].rows / BLOCK_SIZE; // # vertical blocks
 
     vector<vector<Mat>> blocks(NR_H_BLOCKS * NR_V_BLOCKS); // Create vectors to hold sequence of blocks. 
     vector<Patch> patches; // vector to hold all patches. 
@@ -102,15 +102,19 @@ int main(int argc, char** argv)
 
         for(decltype(blocksAsCoords.size()) i =0;  i<blocksAsCoords.size(); ++i){
             
-            auto matrix = blocksAsCoords.at(i);
+            auto matrix = blocksAsCoords.at(i); // the coords are saved as column vectors
             cout << matrix.size() <<endl;
-            Mat m = matrix.t();
+            Mat m = matrix.t(); // turn col.vecs to row.vecs since our impl.functions assume row vectors.
             for(int j = 0; j<3 ; ++j){
                 
                 auto coords = patches.at(i).backProject(m.row(j));
                 //cout<<  m.row(j) << endl;
                 displayImage(constructImageFromRow(coords,PNR_ROWS,PNR_COLS));
                 int k = waitKey(0);
+                if (k == 113){   // the letter q, exits program.
+                    destroyAllWindows();    
+                    return 0;
+                }
             }
         }
     }
