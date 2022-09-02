@@ -17,3 +17,6 @@ The outer "blocks" vector is of size 576 and at each index j it contains another
 positional block j from all frames. 
 
 A Patch is class 
+
+Adding lines that I want removed later. This is the original file. 
+
