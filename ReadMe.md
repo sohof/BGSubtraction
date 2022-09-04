@@ -1,5 +1,7 @@
 Experimenting algorithms for background subtraction in dynamic scenes.
 
+In this readme we add some explanation of the logic/process and thinking behind the code. So we can
+more easily understand if we ever need to review it. 
 
 
 
@@ -14,9 +16,8 @@ A stream of video will consist of a given number of frames. Each individual fram
 
 We create a vector of vectors to store all blocks from all frames: vector<vector<Mat>> blocks(NR_H_BLOCKS * NR_V_BLOCKS);
 The outer "blocks" vector is of size 576 and at each index j it contains another vector responsable for storing
-positional block j from all frames. 
+positional block j from/of all frames. 
 
-A Patch is class 
-
-Adding lines that I want removed later. This is the original file. 
+The Patch class is used to do pca on all frames for a given block and store the principal components/eigenvectors
+for that block. A patch is then used for projecting/backprojecting from the subspace. We will of course have as many patches as we have blocks. 
 

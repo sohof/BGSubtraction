@@ -19,7 +19,7 @@ public:
     cv::Mat project(const cv::Mat &vec) const;
 
     // member functions    
-    void calcPCA(cv::InputArray data);
+    void calcPCA(cv::InputArray data); // not used at the moment
 
 private:
     const int ID =0;

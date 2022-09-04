@@ -99,13 +99,14 @@ int main(int argc, char** argv)
         for (auto patch : patches){
             // patch.displayPCAComponents();
         }
-
+        const int NR_OF_IMGS_PER_BLOCK_TO_DISPLAY = 3;
         for(decltype(blocksAsCoords.size()) i =0;  i<blocksAsCoords.size(); ++i){
             
             auto matrix = blocksAsCoords.at(i); // the coords are saved as column vectors
-            cout << matrix.size() <<endl;
+            cout <<"Block " <<i<< " size " << matrix.size() << ". Displaying " 
+                 <<NR_OF_IMGS_PER_BLOCK_TO_DISPLAY<< " Images from this block" <<endl;
             Mat m = matrix.t(); // turn col.vecs to row.vecs since our impl.functions assume row vectors.
-            for(int j = 0; j<3 ; ++j){
+            for(int j = 0; j<NR_OF_IMGS_PER_BLOCK_TO_DISPLAY ; ++j){
                 
                 auto coords = patches.at(i).backProject(m.row(j));
                 //cout<<  m.row(j) << endl;

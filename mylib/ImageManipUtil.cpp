@@ -70,7 +70,7 @@ Mat constructImageFromRow(const Mat &matrix, const int ROWS, const int COLS) {
 /**
  * @brief Formats images in order to apply PCA. Each image is split into
  * its separate channels and then flattened into a row vector so all the channels
- * are in the same vector. Thus each in the return Mat consists represent one
+ * are in the same vector. Thus each row in the return Mat consists represent one
  * complete 3-channel image. The nr of rows in the Mat equals the nr of images we are working on.
  * @param images 
  * @return Mat 
@@ -78,7 +78,7 @@ Mat constructImageFromRow(const Mat &matrix, const int ROWS, const int COLS) {
 Mat formatImagesForPCA(const vector<Mat> &images)
 {
   const unsigned NR_IMGS = images.size(); // Nr of images we have
-  const unsigned NR_PIXELS = images.at(0).total(); //one channel of imgis a point in NR_OF_PIXELS dimensional space.
+  const unsigned NR_PIXELS = images.at(0).total(); //A single channel of an img is a point in NR_OF_PIXELS dimensional space.
 
   Mat dst(NR_IMGS, NR_CHANNELS*NR_PIXELS, CV_64FC1);
 
