@@ -7,7 +7,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(OpenCV_DIR /opt/homebrew/Cellar/opencv/4.5.3_2/lib/cmake/opencv4)
 
-#add_compile_options(-Wall -Wextra -pedantic -Werror -fsanitize=address,undefined)
+# When using all the compile options we get a weird error, because sth in cuda opencv  
+# maybe uses some c+11 feature which clang warns about and is config. to fail on.
+# error: '_Atomic' is a C11 extension [-Werror,-Wc11-extensions]
+# We can simply specifically deactivate this warning with the -Wno-c11-extensions 
+# compiler flag
+
+# ADDING COMPILER AND LINKER OPTIONS TO GET MORE WARNINGS AND EARLY FAILURES.
+add_compile_options(-Wall -Wextra -pedantic -Werror  -Wno-c11-extensions -fsanitize=address,undefined)
+add_link_options(-Wall -Wextra -pedantic -Werror -fsanitize=address,undefined)
+
 
 # MAKE SURE OPENCV IS INSTALLED CORRECTLY. Each library prepares file/s which cmake uses to configure everything.
 find_package(OpenCV REQUIRED)
@@ -33,3 +42,5 @@ ENDMACRO()
 ######## EDIT THE FILE NAMES ########
 add_example(ProcessVideo)
 add_example(Main)
+add_example(NN_Model)
+

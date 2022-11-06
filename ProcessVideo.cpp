@@ -36,7 +36,7 @@ int main()
     int frame_counter = 0; // counter to control nr frames coming from video.
     const int FRACTION_TO_KEEP = 3; // nr to control what fraction of incoming frames
     // to actually keep.
-    const int UPPER_LIMIT = 1800; // limit nr of frames we keep from video
+    //const int UPPER_LIMIT = 1800; // limit nr of frames we keep from video
 
     double f_width =  cap.get(CAP_PROP_FRAME_WIDTH);
     double f_height = cap.get(CAP_PROP_FRAME_HEIGHT);

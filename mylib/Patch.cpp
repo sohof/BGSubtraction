@@ -15,6 +15,12 @@ Patch::Patch(int id,cv::InputArray data):
 ID(id),pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW, PNR_MAX_COMPONENTS) {
 
 }
+
+/**
+ * @brief member function to calculate pca components. 
+ *  But since is also done in the constructor we are not using this
+ *  function at the moment.
+ */
 void Patch::calcPCA(cv::InputArray data){
 
     pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW, PNR_MAX_COMPONENTS);
@@ -42,6 +48,8 @@ cv::Mat Patch::project(const cv::Mat &vec) const {
  * vector from the principal components subspace back into the original image/pixel space. 
  * @param vec with the coords in the principal components lower dimensional subspace
  * @return A Mat containing the reconstruction of the projection in original img/pixel space.
+ * but it is "flattened image" stored in Mat, needs to be properly reconstructed if you
+ * want to display the actual image.
  */
 
 Mat Patch::backProject(const Mat &vec) const {

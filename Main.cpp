@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -11,6 +12,10 @@
 #include <Patch.hpp>
 #include <Constants.hpp>
 #include <PCA.hpp>
+#include <NN_Utils.hpp>
+
+
+
 /*
 Seems visual code will flag the headers as missing even if cmake makes sures they are included during the build. So I added include path in visual code c++ Configurations. Probably because the code can be compiled from withing visual code as well, altough I am not using it. */
 
@@ -46,6 +51,7 @@ void computeProjections(const vector<vector<Mat>> &blocks, const vector<Patch> &
 }
 int main(int argc, char** argv)
 {
+
     cv::CommandLineParser parser(argc, argv, keys);
     if (parser.has("help"))
     {
@@ -54,7 +60,7 @@ int main(int argc, char** argv)
     }
     // Get the path to images and other program arguments.
     const int NR_OF_IMGS = parser.get<int>("N");
-    const int NR_OF_COMP_TO_USE = parser.get<int>("K");
+    // const int NR_OF_COMP_TO_USE = parser.get<int>("K"); We are not using this currently
     const double VAR_TO_RETAIN = parser.get<double>("V");
     const string directoryOfImages = parser.get<string>("@path");
     const string process = parser.get<string>("@process");
@@ -76,6 +82,9 @@ int main(int argc, char** argv)
     const int NR_H_BLOCKS = images[0].cols / BLOCK_SIZE; // # horizontal blocks the img will be divided into
     const int NR_V_BLOCKS = images[0].rows / BLOCK_SIZE; // # vertical blocks
 
+    // blocks[i] contains a vector of Mats. The Mats represent the "cutout" part of original video frame 
+    // which have mentally divided into "blocks". The inner vector thus contains this "cutout" part of
+    // the original sized frame, for all frames in the video seqs.
     vector<vector<Mat>> blocks(NR_H_BLOCKS * NR_V_BLOCKS); // Create vectors to hold sequence of blocks. 
     vector<Patch> patches; // vector to hold all patches. 
     vector<Mat> blocksAsCoords; // vector to hold projections of blocks 
@@ -87,30 +96,41 @@ int main(int argc, char** argv)
     cout << "An image will be divided into " << NR_H_BLOCKS << " horizontal and " 
          << NR_V_BLOCKS << " vertical blocks of size " <<BLOCK_SIZE <<"x"<<BLOCK_SIZE<< endl;
 
-    if(process.compare("pca") == 0){
+    if(process.compare("pca") == 0)
+    {
         cout <<"Performing PCA: variance to retain "<< VAR_TO_RETAIN<<  endl;
         doPCA(images,VAR_TO_RETAIN);
         
     }
-    else if(process.compare("patchpca") == 0){
-     cout <<"Performing PCA on patches: nr of principal components to use "<<  PNR_MAX_COMPONENTS <<  endl;
-     doPCAOnPatches(blocks,patches);
-     computeProjections(blocks,patches,blocksAsCoords);
-        for (auto patch : patches){
-            // patch.displayPCAComponents();
-        }
+    else if(process.compare("patchpca") == 0)
+    {
+        cout <<"Performing PCA on patches: nr of principal components to use "<<  PNR_MAX_COMPONENTS <<  endl;
+        doPCAOnPatches(blocks,patches);
+        computeProjections(blocks,patches,blocksAsCoords); // for all frames comp. their proj. to lower-dim space.
+
+        // the code below is just for testing/displaying purposes, not necessary just 
+        // for (auto patch : patches)
+        // {
+        //     patch.displayPCAComponents(); // display eigenvecs of each patch
+        // }
+        
         const int NR_OF_IMGS_PER_BLOCK_TO_DISPLAY = 3;
+        
         for(decltype(blocksAsCoords.size()) i =0;  i<blocksAsCoords.size(); ++i){
             
             auto matrix = blocksAsCoords.at(i); // the coords are saved as column vectors
             cout <<"Block " <<i<< " size " << matrix.size() << ". Displaying " 
                  <<NR_OF_IMGS_PER_BLOCK_TO_DISPLAY<< " Images from this block" <<endl;
+
+            cout << matrix.col(0) <<endl; // Showing data/coords as columns vecs
             Mat m = matrix.t(); // turn col.vecs to row.vecs since our impl.functions assume row vectors.
+            cout << m.row(0) <<endl; // Showing same data as /coords as row vecs
             for(int j = 0; j<NR_OF_IMGS_PER_BLOCK_TO_DISPLAY ; ++j){
                 
-                auto coords = patches.at(i).backProject(m.row(j));
-                //cout<<  m.row(j) << endl;
-                displayImage(constructImageFromRow(coords,PNR_ROWS,PNR_COLS));
+                // the backProject return a flattened image as row vector in a Mat
+                auto croppedFrameAsRowVector = patches.at(i).backProject(m.row(j));
+
+                displayImage(constructImageFromRow(croppedFrameAsRowVector,PNR_ROWS,PNR_COLS));
                 int k = waitKey(0);
                 if (k == 113){   // the letter q, exits program.
                     destroyAllWindows();    
@@ -119,14 +139,11 @@ int main(int argc, char** argv)
             }
         }
     }
-    else{
+    else if(process.compare("print") == 0){
         
-        Mat A(2, 3, CV_64F);  
-        //manualPCA(images,5);
-        cout << A <<endl;
-        cout << A.size() <<endl;
-        cout <<"Doing Nothing " <<endl;
-        cout << A.reshape(1,A.total()) <<endl;
+       
+        cout <<"Doing nothing code was moved to NN_Model" <<endl;
+
     }
 
 return 0;

@@ -7,11 +7,13 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include <fstream>
 #include <vector>
 #include <set>
 #include "../include/FSUtils.hpp"
 #include "../include/Constants.hpp"
 #include "../include/ImageManipUtil.hpp"
+#include <iomanip>
 using namespace cv;
 using std::cout;
 using std::endl;
@@ -19,6 +21,7 @@ using std::string;
 using std::vector;
 using cv::Mat;
 using namespace myConsts;
+
 
 string type2str(int type) {
   string r;
@@ -73,7 +76,7 @@ void displayComponents(const Mat &eigVecMatrix, const int NR_COMPS, const int RO
     string frame = "PC_Comp_"+ std::to_string(i+1);
     displayImage(constructImageFromRow(eigVecMatrix.row(i),ROWS,COLS),frame);
   }
-  int k = waitKey(0);
+  waitKey(0);
 }
 /**
  * @brief Write the image to disk. Creates a filename based on the nr of pca components that
@@ -139,4 +142,35 @@ void readImagesFromPaths(const setOfPaths &sorted_set, vector<Mat> &data, const 
         break;
     }
     cout << "Succesfully read " << data.size() << " image(s)." <<endl;
+}
+
+void readValuesFromFileToMat(Mat& mat, string filePath){
+
+
+  std::ifstream myfile(filePath);
+  std::string mystring;
+  std::vector<double> dvec;
+  if (myfile.is_open()) 
+  { // always check whether the file is open
+    //int cnt = 0;
+    //std::cout << std::setprecision(17);
+    while(myfile)  
+    { 
+      double dval = 0.0;
+      myfile >> dval;
+      dvec.push_back(dval);
+
+    }  
+
+    int idx = 0; 
+    for (int i = 0; i < mat.rows; i++)
+      {
+        for (int j = 0; j < mat.cols; j++)
+        {
+          mat.at<double>(i,j) = dvec.at(idx++); 
+        }
+        
+    }
+    
+  }
 }

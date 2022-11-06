@@ -20,6 +20,14 @@ using std::endl;
 using std::string;
 using std::vector;
 
+/**
+ * @brief doPCAOnPatches takes the blocks vector as arg, containing all frames of the video 
+ * sequence but subdivded into blocks. Each inner vector "blocks.at(i)" contains all frames
+ * for a given block. The doPCAOnPatches computes pca components for each such block and
+ * saves the computation in structure called a patch. For each block we a corresponding patch
+ * and each such patch is stored in the patches vector received as argument. 
+ */
+
 void doPCAOnPatches(const vector<vector<Mat>> &blocks, vector<Patch> &patches ){
 
     for(decltype(blocks.size()) i = 0; i < blocks.size(); ++i) {
@@ -27,11 +35,18 @@ void doPCAOnPatches(const vector<vector<Mat>> &blocks, vector<Patch> &patches ){
         // Reshape and stack blocks into a rowMatrix. The 3-channels will be concatenated to long row vector.
         Mat data = formatImagesForPCA(blocks.at(i));
         //cout << "Size of data matrix " << data.size() <<endl;
-        Patch p(i,data); 
+        Patch p(i,data); // Just calling the constructor does all calculations. 
         patches.push_back(p);
     }
 
 }
+
+/**
+ * @brief doPCA is an old function kept around for documentation purposes
+ * on how we originally approached the problem, this is only used if the
+ * program is started whith the "pca" option. Which is irrelevant when we 
+ * are working with blocks/patches.
+ */
 void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
 
     const int NR_ROWS = images[0].rows; // row size of each image which means height
@@ -40,9 +55,10 @@ void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
     // Reshape and stack images into a rowMatrix. The 3-channels will be concatenated to long row vector.
     Mat data = formatImagesForPCA(images);
     cout << "Size of data matrix " << data.size() <<endl;
-    const int maxComp = 10;
+    //const int maxComp = 10;
     // send empty Mat() since we don't have precomputed means, pca does it for us.
-    PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, maxComp);
+    // Consr. accepts int max_nr of comps to use. Or a double % variance to be retained 
+    PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, VAR_TO_RETAIN);
     cout << "Size of principal components matrix " << pca.eigenvectors.size() <<endl;
     
     int NR_OF_COMP_USED = pca.eigenvectors.size().height;
@@ -61,10 +77,15 @@ void doPCA(const vector<Mat> &images, const double VAR_TO_RETAIN){
     displayImage(reconstruction,"Reconstruction");
     writeImage(reconstruction,NR_OF_COMP_USED);
 
-    int k = waitKey(0);
+    waitKey(0);
     destroyAllWindows();
 }
 
+
+/**
+ * @brief manualPCA is an old function kept around for documentation purposes
+ * on how we originally approached the problem, not used at the moment.
+ */
 void manualPCA(const vector<Mat> &images, const int NR_OF_COMP_TO_USE){
 
     const int NR_ROWS = images[0].rows; // row size of each image which means height
@@ -158,7 +179,7 @@ void manualPCA(const vector<Mat> &images, const int NR_OF_COMP_TO_USE){
     displayImage(outImg);
     writeImage(outImg,NR_OF_COMP_TO_USE);
 
-    int k = waitKey(0);
+    waitKey(0);
     destroyAllWindows();
 }
 

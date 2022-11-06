@@ -17,7 +17,7 @@ void compress_using_SVD(const vector<Mat> &images, const double VAR_TO_RETAIN){
     Mat bgr_channels[3];
     Mat data = images.at(0).clone();
     split(data,bgr_channels);
-    for (size_t i = 0; i < data.channels(); i++)
+    for (int i = 0; i < data.channels(); i++)
     {
         bgr_channels[i].convertTo(bgr_channels[i],CV_64FC1);
     }
@@ -51,7 +51,7 @@ void compress_using_SVD(const vector<Mat> &images, const double VAR_TO_RETAIN){
         chls.push_back(Mat(data.size(),CV_64FC1,cv::Scalar(0.0)));
     }
     // Add up to rank "count"
-    for (int i = 0; i < count; i++)
+    for (size_t i = 0; i < count; i++)
     {
         chls[0] += w_s[0].at<double>(i,0)*u_s[0].col(i)*vt_s[0].row(i);
         chls[1] += w_s[1].at<double>(i,0)*u_s[1].col(i)*vt_s[1].row(i);
@@ -66,7 +66,7 @@ void compress_using_SVD(const vector<Mat> &images, const double VAR_TO_RETAIN){
 
     namedWindow("Frame", cv::WINDOW_NORMAL);
     imshow("Frame",outImg);
-    int k = cv::waitKey(0);
+    cv::waitKey(0);
 
     std::string filename{"compressed_used_"};
     filename.append(std::to_string(NR_OF_COMP_USED)).append(".png");

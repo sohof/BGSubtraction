@@ -17,6 +17,8 @@ void displayImage(const cv::Mat &img, const std::string windowName);
 void displayComponents(const cv::Mat &eigVecMatrix, const int NR_COMPS, const int ROWS, const int COLS);
 void writeImage(const cv::Mat &img, const int NR_COMPS);
 
+void readValuesFromFileToMat(cv::Mat& mat, std::string filePath);
+
 // In commandLineParser Docs they use opencv String, I am using std::string. Seems to work just fine.
 const std::string keys =
         "{help h usage ? |      | options for printing this help message   }"
