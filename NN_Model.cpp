@@ -35,32 +35,6 @@ void printMatSlice(const Mat1d& matrix, int rowsToPrint, int colsToPrint)
         cout << endl;
     }
 }
-void nn_model_train(const Mat1d &X, const Mat1d &Y, mat1dMap &params, const int NUM_ITERS, const double LEARNING_RATE, const bool PRINT_COST)
-{
-    cout<<"nn_model_train. Layers (2,4,1). Nr of iterations: " << NUM_ITERS<< ". Learning rate: " <<  LEARNING_RATE << endl;
-    //auto layers = layer_sizes(X, Y);
-    vector<int> layers = {2,4,1};
-
-    initialize_parameters(layers, params);
-    //cout << "W2 = " << params.at("W2") << endl;
-    for (int i = 0; i < NUM_ITERS; i++)
-    {
-        
-        mat1dMap cache = forward_propagation(X, params);
-
-        double cost = compute_cost(cache.at("A2"),Y);
-
-        mat1dMap grads = back_prop(params, cache, X, Y);
-
-        update_parameters(params, grads, LEARNING_RATE);
-    
-        if (PRINT_COST && i % 1000 == 0)
-        {
-            cout << "Cost after iteration " << i << ": " << cost << endl;
-        }
-        
-    }
-}
 
 void L_layer_model(const Mat1d &X, const Mat1d &Y, mat1dMap &params, const int NUM_ITERS, const double LEARNING_RATE, const bool PRINT_COST)
 {
@@ -93,12 +67,6 @@ void L_layer_model(const Mat1d &X, const Mat1d &Y, mat1dMap &params, const int N
 
 int main()
 {
-    string filePathInput = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/Input.txt";
-    string filePathLabel = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/Labels.txt";
-    Mat1d X = Mat::zeros(2, 400, CV_64F);
-    Mat1d Y = Mat::zeros(1, 400, CV_64F);
-    readValuesFromFileToMat(X, filePathInput);
-    readValuesFromFileToMat(Y, filePathLabel);
 
     string filePath_train_X = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/train_x.txt";
     string filePath_train_Y = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/train_y.txt";  
@@ -116,31 +84,15 @@ int main()
     readValuesFromFileToMat(Y_test, filePath_test_Y);
 
 
-    // cout << "Testing 2-layer network on planar 2-dimensional data Tanh activation "<<endl;
-    // mat1dMap paramsSmall;
-    // nn_model_train(X, Y, paramsSmall, 15000, 1.2, true);
-  
-    // Mat1d predictions = predict(X,paramsSmall);
-    // calcAndPrintAccuracy(predictions,Y);
-
-    cout <<"Test planar data with deeper network and Relu Actication" <<endl;
-
-    mat1dMap paramsSmall_v2;
-    L_layer_model(X, Y, paramsSmall_v2, 50000,0.2,true);
-    Mat1d predictions_v2 = predict(X,paramsSmall_v2);
-    calcAndPrintAccuracy(predictions_v2,Y);
-
-    // cout << "Testing L-layer network on Cat image data"<<endl;
-    // cout << "TD matrix size: "<< X_train.size <<". TD Labels matrix size: " << Y_train.size << endl;
-    // cout << "Test Data matrix size: "<< X_test.size <<". Test Data Labels matrix size: " << Y_test.size << endl;
+    cout << "Testing L-layer network on Cat image data"<<endl;
+    cout << "TD matrix size: "<< X_train.size <<". TD Labels matrix size: " << Y_train.size << endl;
+    cout << "Test Data matrix size: "<< X_test.size <<". Test Data Labels matrix size: " << Y_test.size << endl;
  
-    // cout << std::setprecision(17);
-    // mat1dMap params;
-    // L_layer_model(X_train, Y_train, params, 1000,0.0075,true); 
+    cout << std::setprecision(17);
+    mat1dMap params;
+    L_layer_model(X_train, Y_train, params, 1000,0.0075,true); 
 
-    // predictAndCalcAccuracyDeep(X_train,Y_train,params);
-    // predictAndCalcAccuracyDeep(X_test,Y_test,params);
-
-
+    predictAndCalcAccuracyDeep(X_train,Y_train,params);
+    predictAndCalcAccuracyDeep(X_test,Y_test,params);
 
 }
