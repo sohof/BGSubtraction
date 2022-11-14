@@ -19,7 +19,7 @@ inline constexpr int BLOCK_SIZE{300};
 inline constexpr int PNR_ROWS{BLOCK_SIZE}, PNR_COLS{BLOCK_SIZE}, PNR_PIXELS{BLOCK_SIZE*BLOCK_SIZE};
 inline constexpr int PNR_MAX_COMPONENTS{8};
 
-inline constexpr int hidden_layers[]={8,4};
+inline constexpr int hidden_layers[]={8};
 //inline constexpr double LEARNING_RATE{1.2};
 //inline constexpr int NR_ITERATIONS{10000};  
 }

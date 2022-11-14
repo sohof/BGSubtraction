@@ -82,7 +82,7 @@ void L_layer_model(const Mat1d &X, const Mat1d &Y, mat1dMap &params, const int N
 
         mat1dMap grads = L_model_backward(AL,Y,caches);
         update_parametersDeep(params,grads,LEARNING_RATE);
-
+        
         if ((PRINT_COST && i % 1000) == 0)
         {
             cout << "Cost after iteration " << i << ": " << cost << endl;
@@ -116,34 +116,31 @@ int main()
     readValuesFromFileToMat(Y_test, filePath_test_Y);
 
 
-    cout << "Testing 2-layer network on planar 2-dimensional data "<<endl;
-    mat1dMap paramsSmall;
-    nn_model_train(X, Y, paramsSmall, 10000, 1.2, true);
+    // cout << "Testing 2-layer network on planar 2-dimensional data Tanh activation "<<endl;
+    // mat1dMap paramsSmall;
+    // nn_model_train(X, Y, paramsSmall, 15000, 1.2, true);
   
-    Mat1d predictions = predict(X,paramsSmall);
-    calcAndPrintAccuracy(predictions,Y);
+    // Mat1d predictions = predict(X,paramsSmall);
+    // calcAndPrintAccuracy(predictions,Y);
 
-    cout <<"Test planar data with deeper network" <<endl;
+    cout <<"Test planar data with deeper network and Relu Actication" <<endl;
 
     mat1dMap paramsSmall_v2;
-    L_layer_model(X, Y, paramsSmall_v2, 10000,1.2,true);
+    L_layer_model(X, Y, paramsSmall_v2, 50000,0.2,true);
     Mat1d predictions_v2 = predict(X,paramsSmall_v2);
     calcAndPrintAccuracy(predictions_v2,Y);
 
-    // cout << "Testing L-layer network on Cat image data"<<end;
+    // cout << "Testing L-layer network on Cat image data"<<endl;
     // cout << "TD matrix size: "<< X_train.size <<". TD Labels matrix size: " << Y_train.size << endl;
     // cout << "Test Data matrix size: "<< X_test.size <<". Test Data Labels matrix size: " << Y_test.size << endl;
  
-
+    // cout << std::setprecision(17);
     // mat1dMap params;
-    // L_layer_model(X_train, Y_train, params, NR_ITERATIONS,true);
+    // L_layer_model(X_train, Y_train, params, 1000,0.0075,true); 
 
     // predictAndCalcAccuracyDeep(X_train,Y_train,params);
     // predictAndCalcAccuracyDeep(X_test,Y_test,params);
 
 
-
-
-   
 
 }

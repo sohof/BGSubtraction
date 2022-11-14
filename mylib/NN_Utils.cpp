@@ -5,6 +5,7 @@
 #include <vector>
 #include <utility>
 #include <tuple>
+#include <cmath>
 #include "../include/NN_Utils.hpp"
 #include "../include/Constants.hpp"
 
@@ -46,6 +47,17 @@ vector<int> layer_sizes(const Mat1d &X, const Mat1d &Y)
     return lsizes;
 }
 
+/**
+ * @brief Initialize our W parameter matrices using (Not sure if I have the name correct)
+ * Xavier initialization. Where matrix size is init. using standard normal gaussian followed
+ * by multiplication with sqrt(1 / n_(l-1)). Where is n_(l-1) = nr of input/hidden units
+ * from previous layer. This means, assuming we are at layer l, we look at how many
+ * inputs are coming to current layer l, initialize weights of this layer proportionally
+ * to the number of inputs that are coming in. This scheme works well for sigmoid activations.
+ * If using ReLU using sqrt(2 / n_(l-1)) is supposed to make network train better. 
+ * @param layer_dims 
+ * @param params 
+ */
 void initialize_parameters(const vector<int> &layer_dims, std::map<string, Mat1d> &params)
 {
 
@@ -61,8 +73,10 @@ void initialize_parameters(const vector<int> &layer_dims, std::map<string, Mat1d
         string bias_param_name = b + std::to_string(l);
 
         Mat1d w_matrix(layer_dims.at(l), layer_dims.at(l - 1), CV_64F);
+        // Not sure about the name, but think it is Xavier initialization
+        // normal stand.distr. of right size * sqrt(1 / nr of hidden units from prev.layer)
         cv::randn(w_matrix, cv::Scalar(mean), cv::Scalar(stddev));
-        w_matrix = w_matrix * 0.01;
+        w_matrix = w_matrix * std::sqrt(2.0/layer_dims.at(l - 1));
         Mat1d bias_vector = Mat::zeros(layer_dims.at(l), 1, w_matrix.type());
 
         params.emplace(matrix_name, w_matrix);
@@ -432,7 +446,7 @@ pair<Mat1d, pair<tuple_3, Mat1d>> linear_activation_forward(const Mat1d &A_prev,
         //cout<<"inside linear_activation_forward relu" << endl;
         auto lin_fram_par = linear_forward(A_prev, W, b); // returns (Z,(A,W,b))
         linear_cache = lin_fram_par.second;               // = 3-tuple (A,W,b)
-        auto act_fram_par = tanh_deep(lin_fram_par.first); // send in Z. Get (A,activation_cache=Z)   *** CHANGED RELUD TO TANH
+        auto act_fram_par = relu_deep(lin_fram_par.first); // send in Z. Get (A,activation_cache=Z)   *** CHANGED RELUD TO TANH
         A = act_fram_par.first;
         cache = std::make_pair(linear_cache, act_fram_par.second); // (linear_cache,activation_cache)
     }
@@ -536,7 +550,7 @@ tuple_3 linear_activation_backward(const Mat1d &dA, const pair<tuple_3, Mat1d> &
     if (activation == "relu")
     {
         //cout<<"inside linear_activation_backward relu" << endl;
-        Mat1d dZ = tanh_backward(dA,activation_cache); 
+        Mat1d dZ = relu_backward(dA,activation_cache); 
         return linear_backward(dZ,linear_cache); // returns (dA_prev,dW,db) as 3-tuple
     }
     else // if it was not "relu" then must be sigmoid.
@@ -612,18 +626,19 @@ void update_parametersDeep(mat1dMap &params, const mat1dMap &grads, const double
         const string dW_key = "dW" + std::to_string(l+1);
         const string db_key = "db" + std::to_string(l+1);
 
-        Mat1d W = params.at(W_key) - LEARNING_RATE * grads.at(dW_key);
-        Mat1d b = params.at(b_key) - LEARNING_RATE * grads.at(db_key); 
-        // W = W - LEARNING_RATE * grads.at(dW_key);
-        // b = b - LEARNING_RATE * grads.at(db_key);
-        
-        params.insert_or_assign(W_key,W);
-        params.insert_or_assign(b_key,b);
+        Mat1d W = params.at(W_key).clone(); 
+        Mat1d b = params.at(b_key).clone();
 
-        // params.erase(W_key);
-        // params.erase(b_key);
-        // params.emplace(W_key,W);
-        // params.emplace(b_key,b);
+         W = W - (LEARNING_RATE * grads.at(dW_key));
+         b = b - (LEARNING_RATE * grads.at(db_key)); 
+    
+        // params.insert_or_assign(W_key,W);
+        // params.insert_or_assign(b_key,b);
+
+        params.erase(W_key);
+        params.erase(b_key);
+        params.emplace(W_key,W);
+        params.emplace(b_key,b);
     }
     
 }
