@@ -48,3 +48,79 @@ now represents "all the frames in the video seqs belonging to a certain block".
 So by using a "vector<Mat> blocksAsCoords" we can store data from all frames for all blocks
 
 
+
+Set up cata data for DL model
+    string filePath_train_X = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/cat_train_x.txt";
+    string filePath_train_Y = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/cat_train_y.txt";  
+    string filePath_test_X = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/cat_test_x.txt";
+    string filePath_test_Y = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/cat_test_y.txt";
+
+    Mat1d X_train = Mat::zeros(12288, 209, CV_64F);
+    Mat1d Y_train = Mat::zeros(1, 209, CV_64F);
+    Mat1d X_test = Mat::zeros(12288, 50, CV_64F);
+    Mat1d Y_test = Mat::zeros(1, 50, CV_64F);
+
+    readValuesFromFileToMat(X_train, filePath_train_X);
+    readValuesFromFileToMat(Y_train, filePath_train_Y);
+    readValuesFromFileToMat(X_test, filePath_test_X);
+    readValuesFromFileToMat(Y_test, filePath_test_Y);
+
+cout << "Testing L-layer network on Cat image data"<<endl;
+
+
+    // Set up soccer data for course 2 week 1 Regularization
+    string filePath_train_X = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/socc_train_x.txt";
+    string filePath_train_Y = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/socc_train_y.txt";  
+    string filePath_test_X = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/socc_test_x.txt";
+    string filePath_test_Y = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/socc_test_y.txt";
+
+    Mat1d X_train = Mat::zeros(2, 211, CV_64F);
+    Mat1d Y_train = Mat::zeros(1, 211, CV_64F);
+    Mat1d X_test = Mat::zeros(2, 200, CV_64F);
+    Mat1d Y_test = Mat::zeros(1, 200, CV_64F);
+    cout << "Testing L-layer network on 2D Soccer data"<<endl;
+    
+    cout << "TD matrix size: "<< X_train.size <<". TD Labels matrix size: " << Y_train.size << endl;
+    cout << "Test Data matrix size: "<< X_test.size <<". Test Data Labels matrix size: " << Y_test.size << endl;
+
+    // Set upp moon dataset for testing different optimization methods. Called "moons" 
+    // because the data from each of the two classes looks a bit like a crescent-shaped moon.
+
+    string filePath_train_X = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/moonsX.txt";
+    string filePath_train_Y = "/Users/sohof/Dropbox/Code/BGSubtraction/data/TextFiles/moonsY.txt";  
+
+    Mat1d X_train = Mat::zeros(2, 300, CV_64F);
+    Mat1d Y_train = Mat::zeros(1, 300, CV_64F);
+
+    readValuesFromFileToMat(X_train, filePath_train_X);
+    readValuesFromFileToMat(Y_train, filePath_train_Y);
+
+
+    // Measuring time of functions:
+    #include <chrono>
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    auto t1 = high_resolution_clock::now();
+    model_train_mb(X_train, Y_train, params, NUM_ITERS,LEARNING_RATE,LAMBDA, true, BATCH_SIZE); 
+    auto t2 = high_resolution_clock::now();
+
+    /* Getting number of milliseconds as a double. */
+    duration<double, std::milli> ms_double = t2 - t1;
+    myFile <<"Time: " << ms_double.count() << "ms. ";
+
+    // Writing to file
+    myFile.open("result.txt", std::ios::app);
+    if(myFile){
+        myFile<<"Iterations: "<< NUM_ITERS<< ". LearnR: "<<LEARNING_RATE << ". Lambda: " << LAMBDA <<". ";
+                                         
+    }
+    else{
+        cout << "Error file not created"<<endl;
+    }
+    myFile <<"Time: " << ms_double.count() << "ms. ";
+
+    auto accuracyTrain = predictAndCalcAccuracyDeep(X_train,Y_train,params);
+    myFile << "AccTrain: " << accuracyTrain << "%. " <<endl;
