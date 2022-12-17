@@ -139,6 +139,6 @@ int main()
     //auto accuracyTest = predictAndCalcAccuracyDeep(X_test,Y_test,params);
     //myFile << "AccTest: " << accuracyTest << "%." << endl;
 
-    myFile.close();
+    // myFile.close();
 
 }
